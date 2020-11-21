@@ -53,7 +53,7 @@ function run() {
             return;
             }
             */
-            yield exec.exec('docker', ['run', '--rm', '-i', '-v $HOME/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+            yield exec.exec('docker', ['run', '--rm', '-i', '-v /home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
         }
         catch (error) {
             core.setFailed(error.message);
