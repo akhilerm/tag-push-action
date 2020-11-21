@@ -1,19 +1,28 @@
-import * as core from '@actions/core'
-import {wait} from './wait'
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    const source: string = core.getInput('src');
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const destination: string = core.getInput('dst');
 
-    core.setOutput('time', new Date().toTimeString())
+    /* 
+    if source is empty {
+    	core.setFailed('Source image not set');
+	return;
+    }
+    if destination is empty {
+    	core.setFailed('Destination image not set');
+	return;
+    }
+    */
+
+    await exec.exec('docker', ['run', '--rm', '-i', '-v $HOME/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+
   } catch (error) {
     core.setFailed(error.message)
   }
 }
 
-run()
+run();

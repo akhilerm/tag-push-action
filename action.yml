@@ -1,11 +1,13 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Repo Copy Action'
+description: 'Copy multiarch image from one registry to another'
+author: 'Akhil Mohan'
 inputs:
-  milliseconds: # change this
+  src:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Source registry'
+  dst:
+    required: true
+    description: 'Destination registry'
 runs:
   using: 'node12'
   main: 'dist/index.js'
