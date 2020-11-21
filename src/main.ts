@@ -18,7 +18,7 @@ async function run(): Promise<void> {
     }
     */
 
-    await exec.exec('docker', ['run', '--rm', '-i', '-v $HOME/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+    await exec.exec('docker', ['run', '--rm', '-i', '-v /home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
 
   } catch (error) {
     core.setFailed(error.message)
