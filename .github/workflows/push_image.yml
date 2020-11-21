@@ -15,12 +15,12 @@ jobs:
       - name: Login Quay
         uses: docker/login-action@v1
         with:
-	  registry: 'quay.io'
+          registry: 'quay.io'
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Push image
         uses: akhilerm/repo-copy-action@v1-alpha1
-	with:
-	  src: 'docker.io/akhilerm/node-disk-manager:ci'
-	  dst: 'quay.io/akhilerm/node-disk-manager:ci'
+        with:
+          src: 'docker.io/akhilerm/node-disk-manager:ci'
+          dst: 'quay.io/akhilerm/node-disk-manager:ci'
