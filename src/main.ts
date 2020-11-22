@@ -10,7 +10,7 @@ async function run(): Promise<void> {
     // and use that
     const destination: string = core.getInput('dst');
 
-    await exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+    await exec.exec('docker', ['run', '--rm', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
 
   } catch (error) {
     core.setFailed(error.message)
