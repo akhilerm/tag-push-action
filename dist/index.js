@@ -42,6 +42,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const source = core.getInput('src');
+            // destination should be multiline . So multiple destinations can be specified
             const destination = core.getInput('dst');
             /*
             if source is empty {
@@ -53,7 +54,7 @@ function run() {
             return;
             }
             */
-            yield exec.exec('docker', ['run', '--rm', '-i', '-v /home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+            yield exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
         }
         catch (error) {
             core.setFailed(error.message);
