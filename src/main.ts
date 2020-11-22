@@ -5,6 +5,7 @@ async function run(): Promise<void> {
   try {
     const source: string = core.getInput('src');
 
+    // destination should be multiline . So multiple destinations can be specified
     const destination: string = core.getInput('dst');
 
     /* 
@@ -18,7 +19,7 @@ async function run(): Promise<void> {
     }
     */
 
-    await exec.exec('docker', ['run', '--rm', '-i', '-v /home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
+    await exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
 
   } catch (error) {
     core.setFailed(error.message)
