@@ -1,13 +1,13 @@
-name: 'Repo Copy Action'
-description: 'Copy multiarch image from one registry to another'
+name: 'Tag-Push Action'
+description: 'Retag and push multiplatform docker images'
 author: 'Akhil Mohan'
 inputs:
   src:
     required: true
-    description: 'Source registry'
+    description: 'Source tag'
   dst:
     required: true
-    description: 'Destination registry'
+    description: 'Destination tag'
 runs:
   using: 'node12'
   main: 'dist/index.js'

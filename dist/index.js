@@ -38,22 +38,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
+//import csvparse from 'csv-parse/lib/sync';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const source = core.getInput('src');
-            // destination should be multiline . So multiple destinations can be specified
+            // TODO: users should be able to specify multiple destination. use getDestination()
+            // and use that
             const destination = core.getInput('dst');
-            /*
-            if source is empty {
-                core.setFailed('Source image not set');
-            return;
-            }
-            if destination is empty {
-                core.setFailed('Destination image not set');
-            return;
-            }
-            */
             yield exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, destination]);
         }
         catch (error) {
@@ -61,6 +53,13 @@ function run() {
         }
     });
 }
+/* get all the destination tags
+async function getDestination(): Promise<void> {
+  const dstList = core.getInput('dst');
+
+  for
+}
+*/
 run();
 
 
