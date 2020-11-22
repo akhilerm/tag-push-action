@@ -20,7 +20,7 @@ jobs:
           password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Push image
-        uses: docker/build-push-action@2.2.0
+        uses: docker/build-push-action@v2.2.0
         with:
           push: true
           tags: |
