@@ -20,7 +20,9 @@ jobs:
           password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Push image
-        uses: akhilerm/repo-copy-action@v1-alpha3
+        uses: docker/build-push-action@2.2.0
         with:
-          src: 'docker.io/akhilerm/node-disk-manager:ci'
-          dst: 'quay.io/akhilerm/node-disk-manager:ci'
+          push: true
+          tags: |
+            docker.io/akhilerm/node-disk-manager:ci
+            quay.io/akhilerm/node-disk-manager:cik
