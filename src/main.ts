@@ -29,6 +29,8 @@ async function run(): Promise<void> {
   }
 }
 
+// This function is a modified version from the script used in docker buildx actions
+// Ref https://github.com/docker/build-push-action/blob/master/src/context.ts#L163
 async function getDestinationTags(): Promise<string[]> {
   let res: Array<string> = [];
 

@@ -7,7 +7,7 @@ inputs:
     description: 'Source tag'
   dst:
     required: true
-    description: 'Destination tag'
+    description: 'Destination tags'
 runs:
   using: 'node12'
   main: 'dist/index.js'
