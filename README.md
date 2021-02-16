@@ -43,11 +43,13 @@ jobs:
 ```
 
 1. Login to all the registries from which you want to pull and push the multiplatform image. 
-NOTE: The source registry should be logged in at the last step.
+
+**NOTE: The source registry should be logged in after all destination regisries are logged in.**
 
 2. Specify the `src` and `dst` registry, both of which are mandatory fields. The action allows multiple destination 
 registries specified as a yaml string.
-NOTE: If dockerhub is used, make sure that `docker.io` is specified in the image name
+
+**NOTE: If dockerhub is used, make sure that `docker.io` is specified in the image name**
 
 #### Using with ghaction-docker-meta
 
