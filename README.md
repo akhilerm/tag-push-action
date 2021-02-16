@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push image
-        uses: akhilerm/tag-push-action@v1
+        uses: akhilerm/tag-push-action@v1.0.0
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
@@ -74,7 +74,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        uses: crazy-max/ghaction-docker-meta@v1.0.0
         with:
           images: docker.io/akhilerm/node-disk-manager     
 
