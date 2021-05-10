@@ -7,6 +7,9 @@ jobs:
     name: Test push from docker hub to quay
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Get image tag from commit hash
         run: |
           SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
@@ -45,6 +48,9 @@ jobs:
     name: Test push from quay to docker hub
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Get image tag from commit hash
         run: |
           SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
