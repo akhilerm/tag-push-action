@@ -1,0 +1,83 @@
+name: Tests
+
+on: ['push']
+
+jobs:
+  test1:
+    name: Test push from docker hub to quay
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get image tag from commit hash
+        run: |
+          SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          echo "TAG=${SHORT_HASH}" >> $GITHUB_ENV
+
+      - name: Login Quay
+        uses: docker/login-action@v1
+        with:
+          registry: 'quay.io'
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+
+      - name: Login Dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Test retag and pushing image
+        uses: akhilerm/tag-push-action@master
+        with:
+          src: docker.io/openebs/linux-utils:ci
+          dst: |
+            quay.io/akhilerm/linux-utils:${{ env.TAG }}
+
+      - name: Verify pushed image
+        # pull both images and check if hash is same
+        run: |
+          docker pull openebs/linux-utils:ci
+          docker pull quay.io/akhilerm/linux-utils:${{ env.TAG }}
+          HASH1=$(docker images -q openebs/linux-utils:ci)
+          HASH2=$(docker images -q quay.io/akhilerm/linux-utils:${{ env.TAG }})
+          test $HASH1 = $HASH2
+
+  test2:
+    name: Test push from quay to docker hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get image tag from commit hash
+        run: |
+          SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
+          echo "TAG=${SHORT_HASH}" >> $GITHUB_ENV
+
+      - name: Login Dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login Quay
+        uses: docker/login-action@v1
+        with:
+          registry: 'quay.io'
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_TOKEN }}
+
+      - name: Test retag and pushing image
+        uses: akhilerm/tag-push-action@master
+        with:
+          src: quay.io/openebs/linux-utils:ci
+          dst: |
+            docker.io/akhilerm/linux-utils:${{ env.TAG }}
+
+      - name: Verify pushed image
+        # pull both images and check if hash is same
+        run: |
+          docker pull quay.io/openebs/linux-utils:ci
+          docker pull akhilerm/linux-utils:${{ env.TAG }}
+          HASH1=$(docker images -q quay.io/openebs/linux-utils:ci)
+          HASH2=$(docker images -q akhilerm/linux-utils:${{ env.TAG }})
+          test $HASH1 = $HASH2
+
+
+
