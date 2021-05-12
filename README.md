@@ -86,4 +86,4 @@ jobs:
             ${{ steps.meta.outputs.tags }}
 ```
 
-The output tags from the `docker_meta` can be used as destination tags for this github action.
+The output tags from the `meta` step can be used as destination tags for this github action.
