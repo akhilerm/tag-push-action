@@ -6,7 +6,7 @@ Github action to retag and push multiplatform images to multiple registries
 > * [login](https://github.com/docker/login-action) action
 > * [docker-meta](https://github.com/crazy-max/ghaction-docker-meta) action
 
-This action heavily relies on work done by [@tonistiigi](https://github.com/tonistiigi/repo-copy) and [@crazymax](https://github.com/crazy-max/ghaction-docker-meta)
+This action heavily relies on work done by [@tonistiigi](https://github.com/tonistiigi/repo-copy) and [@crazymax](https://github.com/docker/metadata-action)
 
 ## Usage
 
@@ -51,9 +51,9 @@ registries specified as a yaml string.
 
 **NOTE: If dockerhub is used, make sure that `docker.io` is specified in the image name**
 
-#### Using with ghaction-docker-meta
+#### Using with `docker/metadata-action`
 
-The action can be used alongside [ghaction-docker-meta](https://github.com/crazy-max/ghaction-docker-meta) to generate
+The action can be used alongside [metadata-action](https://github.com/docker/metadata-action) to generate
 tags easily.
 
 ```yaml
@@ -73,8 +73,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1.0.0
+        id: meta
+        uses: docker/metadata-action@v3
         with:
           images: docker.io/akhilerm/node-disk-manager     
 
@@ -83,7 +83,7 @@ jobs:
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
-            ${{ steps.docker_meta.outputs.tags }}
+            ${{ steps.meta.outputs.tags }}
 ```
 
 The output tags from the `docker_meta` can be used as destination tags for this github action.
