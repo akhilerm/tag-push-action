@@ -85,5 +85,15 @@ jobs:
           HASH2=$(docker images -q akhilerm/linux-utils:${{ env.TAG }})
           test $HASH1 = $HASH2
 
+  test3:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
+      - name: Install
+        run: npm install
 
+      - name: Test
+        run: npm test

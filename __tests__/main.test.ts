@@ -1,28 +1,32 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
+import * as main from '../src/main';
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
-})
+describe('getDestinationTags', () => {
+  it('single image', async () => {
+    await setInput('dst', 'akhilerm/linux-utils:ci');
+    const res = await main.getDestinationTags();
+    expect(res).toEqual(['akhilerm/linux-utils:ci']);
+  });
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
-})
+  it('multiple images', async () => {
+    await setInput('dst', 'akhilerm/linux-utils:ci\nquay.io/akhilerm/linux-utils:ci');
+    const res = await main.getDestinationTags();
+    expect(res).toEqual(['akhilerm/linux-utils:ci', 'quay.io/akhilerm/linux-utils:ci']);
+  });
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
-})
+  it('multiline images', async () => {
+    await setInput('dst', `akhilerm/linux-utils:ci
+       quay.io/akhilerm/linux-utils:ci`);
+    const res = await main.getDestinationTags();
+    expect(res).toEqual(['akhilerm/linux-utils:ci', 'quay.io/akhilerm/linux-utils:ci']);
+  });
+});
+
+function setInput(name: string, value: string): void {
+  process.env[getInputName(name)] = value;
+}
+
+// See: https://github.com/actions/toolkit/blob/master/packages/core/src/core.ts#L67
+function getInputName(name: string): string {
+  return `INPUT_${name.replace(/ /g, '_').toUpperCase()}`;
+}
+
