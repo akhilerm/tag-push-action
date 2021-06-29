@@ -22,7 +22,7 @@ async function run(): Promise<void> {
 	  
     let dst: string = destination.join(' ');
     
-    await exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', 'tonistiigi/repo-copy:latest', source, dst]);
+    await exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', '--network', 'host', 'tonistiigi/repo-copy:latest', source, dst]);
 
   } catch (error) {
     core.setFailed(error.message)
