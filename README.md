@@ -91,9 +91,9 @@ jobs:
 
 The output tags from the `meta` step can be used as destination tags for this github action.
 
-### Use a custom .docker/config.json file
+### Use a custom docker config file
 
-In case you're running on a custom GitHub runner and you docker config path is not standard:
+The standard docker config path on GitHub runner is `/home/runner/.docker/config.json`. In case you're running on a custom GitHub runner, and your config path is not standard, then the `docker-config-path` can be used.
 
 ```yaml
   - name: Push image
