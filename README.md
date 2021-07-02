@@ -87,3 +87,17 @@ jobs:
 ```
 
 The output tags from the `meta` step can be used as destination tags for this github action.
+
+### Use a custom .docker/config.json file
+
+In case you're running on a custom GitHub runner and you docker config path is not standard:
+
+```yaml
+  - name: Push image
+    uses: akhilerm/tag-push-action@v1.0.0
+    with:
+      docker-config-path: /home/myuser/.docker/config.json
+      src: docker.io/akhilerm/node-disk-manager:ci
+      dst: |
+        quay.io/akhilerm/node-disk-manager-amd64:ci
+```
