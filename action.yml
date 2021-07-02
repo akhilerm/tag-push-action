@@ -8,6 +8,9 @@ inputs:
   dst:
     required: true
     description: 'Destination tags'
+  docker-config-path:
+    required: false
+    description: 'Docker config file path'
 runs:
   using: 'node12'
   main: 'dist/index.js'
