@@ -48,7 +48,7 @@ jobs:
 
 1. Login to all the registries from which you want to pull and push the multiplatform image.
 
-    **NOTE: The source registry should be logged in after all destination regisries are logged in.**
+    **NOTE: The source registry should be logged in after all destination registries are logged in.**
 
 2. Specify the `src` and `dst` registry, both of which are mandatory fields. The action allows multiple destination registries specified as a yaml string.
 
