@@ -1,29 +1,39 @@
-import csvparse from 'csv-parse/lib/sync';
-import * as core from '@actions/core';
-import * as exec from '@actions/exec';
+import csvparse from 'csv-parse/lib/sync'
+import * as core from '@actions/core'
+import * as exec from '@actions/exec'
 
 async function run(): Promise<void> {
   try {
-    const source: string = core.getInput('src');
+    const source: string = core.getInput('src')
+    const dockerConfigPath: string =
+      core.getInput('docker-config-path') || '/home/runner/.docker/config.json'
 
-    let destination: string[];
-    destination = await getDestinationTags();
+    const destination: string[] = await getDestinationTags()
 
-    if (source == '') {
-      core.setFailed('Source image not set');
-      return;
+    if (source === '') {
+      core.setFailed('Source image not set')
+      return
     }
 
-    if (destination.length == 0) {
-      core.setFailed('Destination image not set');
-      return;
+    if (destination.length === 0) {
+      core.setFailed('Destination image not set')
+      return
     }
 
-	  
-    let dst: string = destination.join(' ');
-    
-    await exec.exec('docker', ['run', '--rm', '-i', '-v', '/home/runner/.docker/config.json:/root/.docker/config.json', '--network', 'host', 'tonistiigi/repo-copy:latest', source, dst]);
+    const dst: string = destination.join(' ')
 
+    await exec.exec('docker', [
+      'run',
+      '--rm',
+      '-i',
+      '-v',
+      `${dockerConfigPath}:/root/.docker/config.json`,
+      '--network',
+      'host',
+      'tonistiigi/repo-copy:latest',
+      source,
+      dst
+    ])
   } catch (error) {
     core.setFailed(error.message)
   }
@@ -32,26 +42,26 @@ async function run(): Promise<void> {
 // This function is a modified version from the script used in docker buildx actions
 // Ref https://github.com/docker/build-push-action/blob/master/src/context.ts#L163
 export async function getDestinationTags(): Promise<string[]> {
-  let res: Array<string> = [];
+  const res: string[] = []
 
-  const items = core.getInput('dst');
-  if (items == '') {
-    return res;
+  const items = core.getInput('dst')
+  if (items === '') {
+    return res
   }
 
-  for (let output of (await csvparse(items, {
+  for (const output of (await csvparse(items, {
     columns: false,
     relaxColumnCount: true,
     skipLinesWithEmptyValues: true
-  })) as Array<string[]>) {
-    if (output.length == 1) {
-      res.push(output[0]);
+  })) as string[][]) {
+    if (output.length === 1) {
+      res.push(output[0])
     } else {
-      res.push(...output);
+      res.push(...output)
     }
   }
 
-  return res.filter(item => item).map(pat => pat.trim());
+  return res.filter(item => item).map(pat => pat.trim())
 }
 
-run();
+run()
