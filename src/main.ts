@@ -34,7 +34,7 @@ async function run(): Promise<void> {
       source,
       dst
     ])
-  } catch (error) {
+  } catch (error: any) {
     core.setFailed(error.message)
   }
 }
