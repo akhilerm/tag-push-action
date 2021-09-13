@@ -84,7 +84,7 @@ function getDestinationTags() {
         if (items === '') {
             return res;
         }
-        for (const output of (yield sync_1.default(items, {
+        for (const output of (yield (0, sync_1.default)(items, {
             columns: false,
             relaxColumnCount: true,
             skipLinesWithEmptyValues: true
@@ -238,7 +238,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
+exports.getState = exports.saveState = exports.group = exports.endGroup = exports.startGroup = exports.info = exports.notice = exports.warning = exports.error = exports.debug = exports.isDebug = exports.setFailed = exports.setCommandEcho = exports.setOutput = exports.getBooleanInput = exports.getMultilineInput = exports.getInput = exports.addPath = exports.setSecret = exports.exportVariable = exports.ExitCode = void 0;
 const command_1 = __nccwpck_require__(351);
 const file_command_1 = __nccwpck_require__(717);
 const utils_1 = __nccwpck_require__(278);
@@ -416,19 +416,30 @@ exports.debug = debug;
 /**
  * Adds an error issue
  * @param message error issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
  */
-function error(message) {
-    command_1.issue('error', message instanceof Error ? message.toString() : message);
+function error(message, properties = {}) {
+    command_1.issueCommand('error', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.error = error;
 /**
- * Adds an warning issue
+ * Adds a warning issue
  * @param message warning issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
  */
-function warning(message) {
-    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+function warning(message, properties = {}) {
+    command_1.issueCommand('warning', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 exports.warning = warning;
+/**
+ * Adds a notice issue
+ * @param message notice issue message. Errors will be converted to string via toString()
+ * @param properties optional properties to add to the annotation.
+ */
+function notice(message, properties = {}) {
+    command_1.issueCommand('notice', utils_1.toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+exports.notice = notice;
 /**
  * Writes info to log with console.log.
  * @param message info message
@@ -562,7 +573,7 @@ exports.issueCommand = issueCommand;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.toCommandValue = void 0;
+exports.toCommandProperties = exports.toCommandValue = void 0;
 /**
  * Sanitizes an input into a string so it can be passed into issueCommand safely
  * @param input input to sanitize into a string
@@ -577,6 +588,25 @@ function toCommandValue(input) {
     return JSON.stringify(input);
 }
 exports.toCommandValue = toCommandValue;
+/**
+ *
+ * @param annotationProperties
+ * @returns The command properties to send with the actual annotation command
+ * See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
+ */
+function toCommandProperties(annotationProperties) {
+    if (!Object.keys(annotationProperties).length) {
+        return {};
+    }
+    return {
+        title: annotationProperties.title,
+        line: annotationProperties.startLine,
+        endLine: annotationProperties.endLine,
+        col: annotationProperties.startColumn,
+        endColumn: annotationProperties.endColumn
+    };
+}
+exports.toCommandProperties = toCommandProperties;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
@@ -2011,7 +2041,7 @@ class Parser extends Transform {
         const date = Date.parse(value)
         return !isNaN(date) ? new Date(date) : value
       }
-    }else if(typeof options.cast_date !== 'function'){
+    }else{
       throw new CsvError('CSV_INVALID_OPTION_CAST_DATE', [
         'Invalid option cast_date:', 'cast_date must be true or a function,',
         `got ${JSON.stringify(options.cast_date)}`
@@ -2347,6 +2377,7 @@ class Parser extends Transform {
       }
     }
     this.info = {
+      bytes: 0,
       comment_lines: 0,
       empty_lines: 0,
       invalid_field_length: 0,
@@ -2356,6 +2387,7 @@ class Parser extends Transform {
     this.options = options
     this.state = {
       bomSkipped: false,
+      bufBytesStart: 0,
       castField: fnCastField,
       commenting: false,
       // Current error encountered by a record
@@ -2442,7 +2474,9 @@ class Parser extends Transform {
         for(let encoding in boms){
           if(boms[encoding].compare(buf, 0, boms[encoding].length) === 0){
             // Skip BOM
-            buf = buf.slice(boms[encoding].length)
+            let bomLength = boms[encoding].length
+            this.state.bufBytesStart += bomLength
+            buf = buf.slice(bomLength)
             // Renormalize original options with the new encoding
             this.__normalizeOptions({...this.__originalOptions, encoding: encoding})
             break
@@ -2582,8 +2616,10 @@ class Parser extends Transform {
                 pos += recordDelimiterLength - 1
                 continue
               }
+              this.info.bytes = this.state.bufBytesStart + pos;
               const errField = this.__onField()
               if(errField !== undefined) return errField
+              this.info.bytes = this.state.bufBytesStart + pos + recordDelimiterLength;
               const errRecord = this.__onRecord()
               if(errRecord !== undefined) return errRecord
               if(to !== -1 && this.info.records >= to){
@@ -2606,6 +2642,7 @@ class Parser extends Transform {
           }
           let delimiterLength = this.__isDelimiter(buf, pos, chr)
           if(delimiterLength !== 0){
+            this.info.bytes = this.state.bufBytesStart + pos;
             const errField = this.__onField()
             if(errField !== undefined) return errField
             pos += delimiterLength - 1
@@ -2655,6 +2692,7 @@ class Parser extends Transform {
       }else{
         // Skip last line if it has no characters
         if(this.state.wasQuoting === true || this.state.record.length !== 0 || this.state.field.length !== 0){
+          this.info.bytes = this.state.bufBytesStart + pos;
           const errField = this.__onField()
           if(errField !== undefined) return errField
           const errRecord = this.__onRecord()
@@ -2666,6 +2704,7 @@ class Parser extends Transform {
         }
       }
     }else{
+      this.state.bufBytesStart += pos
       this.state.previousBuf = buf.slice(pos)
     }
     if(this.state.wasRowDelimiter === true){
@@ -3080,7 +3119,7 @@ const parse = function(){
       throw new CsvError('CSV_INVALID_ARGUMENT', [
         'Invalid argument:',
         `got ${JSON.stringify(argument)} at index ${i}`
-      ], this.options)
+      ], options || {})
     }
   }
   const parser = new Parser(options)
@@ -3222,7 +3261,7 @@ module.exports = function(data, options={}){
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("assert");;
+module.exports = require("assert");
 
 /***/ }),
 
@@ -3230,7 +3269,7 @@ module.exports = require("assert");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("child_process");;
+module.exports = require("child_process");
 
 /***/ }),
 
@@ -3238,7 +3277,7 @@ module.exports = require("child_process");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("events");;
+module.exports = require("events");
 
 /***/ }),
 
@@ -3246,7 +3285,7 @@ module.exports = require("events");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("fs");;
+module.exports = require("fs");
 
 /***/ }),
 
@@ -3254,7 +3293,7 @@ module.exports = require("fs");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("os");;
+module.exports = require("os");
 
 /***/ }),
 
@@ -3262,7 +3301,7 @@ module.exports = require("os");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("path");;
+module.exports = require("path");
 
 /***/ }),
 
@@ -3270,7 +3309,7 @@ module.exports = require("path");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("stream");;
+module.exports = require("stream");
 
 /***/ }),
 
@@ -3278,7 +3317,7 @@ module.exports = require("stream");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("string_decoder");;
+module.exports = require("string_decoder");
 
 /***/ }),
 
@@ -3286,7 +3325,7 @@ module.exports = require("string_decoder");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("timers");;
+module.exports = require("timers");
 
 /***/ }),
 
@@ -3294,7 +3333,7 @@ module.exports = require("timers");;
 /***/ ((module) => {
 
 "use strict";
-module.exports = require("util");;
+module.exports = require("util");
 
 /***/ })
 
@@ -3333,7 +3372,9 @@ module.exports = require("util");;
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
-/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";/************************************************************************/
+/******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
+/******/ 	
+/************************************************************************/
 /******/ 	
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
