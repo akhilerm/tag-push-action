@@ -30,7 +30,7 @@ async function run(): Promise<void> {
       `${dockerConfigPath}:/root/.docker/config.json`,
       '--network',
       'host',
-      'tonistiigi/repo-copy:latest',
+      'akhilerm/repo-copy:latest',
       source,
       dst
     ])

@@ -9,7 +9,9 @@ Github action to retag and push multiplatform images to multiple registries
 > * [login](https://github.com/docker/login-action) action
 > * [docker-meta](https://github.com/crazy-max/ghaction-docker-meta) action
 
-This action heavily relies on work done by [@tonistiigi](https://github.com/tonistiigi/repo-copy) and [@crazymax](https://github.com/docker/metadata-action)
+The v1 version of this action heavily relied on work done by [@tonistiigi](https://github.com/tonistiigi/repo-copy). 
+
+The current version uses [crane](https://github.com/google/go-containerregistry/tree/main/cmd/crane) from google for copying images, and the action itself is a modified version of script written by [@crazymax](https://github.com/docker/metadata-action)
 
 ## Usage
 
@@ -48,7 +50,6 @@ jobs:
 
 1. Login to all the registries from which you want to pull and push the multiplatform image.
 
-    **NOTE: The source registry should be logged in after all destination registries are logged in.**
 
 2. Specify the `src` and `dst` registry, both of which are mandatory fields. The action allows multiple destination registries specified as a yaml string.
 
