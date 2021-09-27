@@ -56,7 +56,6 @@ function run() {
                 core.setFailed('Destination image not set');
                 return;
             }
-            const dst = destination.join(' ');
             yield exec.exec('docker', [
                 'run',
                 '--rm',
@@ -67,7 +66,7 @@ function run() {
                 'host',
                 'akhilerm/repo-copy:latest',
                 source,
-                dst
+                ...destination
             ]);
         }
         catch (error) {

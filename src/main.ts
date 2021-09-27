@@ -20,7 +20,6 @@ async function run(): Promise<void> {
       return
     }
 
-    const dst: string = destination.join(' ')
 
     await exec.exec('docker', [
       'run',
@@ -32,7 +31,7 @@ async function run(): Promise<void> {
       'host',
       'akhilerm/repo-copy:latest',
       source,
-      dst
+      ...destination
     ])
   } catch (error: any) {
     core.setFailed(error.message)
