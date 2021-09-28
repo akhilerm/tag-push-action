@@ -41,7 +41,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push image
-        uses: akhilerm/tag-push-action@v1.0.0
+        uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
@@ -83,7 +83,7 @@ jobs:
           images: docker.io/akhilerm/node-disk-manager     
 
       - name: Push image
-        uses: akhilerm/tag-push-action@v1
+        uses: akhilerm/tag-push-action@v2.0.0
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
@@ -98,7 +98,7 @@ The standard docker config path on GitHub runner is `/home/runner/.docker/config
 
 ```yaml
   - name: Push image
-    uses: akhilerm/tag-push-action@v1.0.0
+    uses: akhilerm/tag-push-action@v2.0.0
     with:
       docker-config-path: /home/myuser/.docker/config.json
       src: docker.io/akhilerm/node-disk-manager:ci
