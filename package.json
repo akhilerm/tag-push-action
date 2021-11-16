@@ -27,7 +27,7 @@
   "dependencies": {
     "@actions/core": "^1.2.7",
     "@actions/exec": "^1.0.4",
-    "csv-parse": "^4.15.3"
+    "csv-parse": "^5.0.1"
   },
   "devDependencies": {
     "@types/jest": "^27.0.1",
