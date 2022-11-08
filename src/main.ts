@@ -1,4 +1,4 @@
-import csvparse from 'csv-parse/lib/sync'
+import {parse} from 'csv-parse/sync'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
@@ -19,7 +19,6 @@ async function run(): Promise<void> {
       core.setFailed('Destination image not set')
       return
     }
-
 
     await exec.exec('docker', [
       'run',
@@ -48,10 +47,10 @@ export async function getDestinationTags(): Promise<string[]> {
     return res
   }
 
-  for (const output of (await csvparse(items, {
+  for (const output of (await parse(items, {
     columns: false,
     relaxColumnCount: true,
-    skipLinesWithEmptyValues: true
+    skipRecordsWithEmptyValues: true
   })) as string[][]) {
     if (output.length === 1) {
       res.push(output[0])
