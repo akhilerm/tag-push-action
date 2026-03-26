@@ -28,20 +28,20 @@ jobs:
     steps:
 
       - name: Login Quay
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           registry: 'quay.io'
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
 
       - name: Login Dockerhub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Push image
-        uses: akhilerm/tag-push-action@v2.1.0
+        uses: akhilerm/tag-push-action@v2.2.0
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
@@ -71,19 +71,19 @@ jobs:
     steps:
 
       - name: Login Dockerhub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v6
         with:
           images: docker.io/akhilerm/node-disk-manager     
 
       - name: Push image
-        uses: akhilerm/tag-push-action@v2.1.0
+        uses: akhilerm/tag-push-action@v2.2.0
         with:
           src: docker.io/akhilerm/node-disk-manager:ci
           dst: |
@@ -98,7 +98,7 @@ The standard docker config path on GitHub runner is `/home/runner/.docker/config
 
 ```yaml
   - name: Push image
-    uses: akhilerm/tag-push-action@v2.1.0
+    uses: akhilerm/tag-push-action@v2.2.0
     with:
       docker-config-path: /home/myuser/.docker/config.json
       src: docker.io/akhilerm/node-disk-manager:ci
