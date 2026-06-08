@@ -2,10 +2,28 @@ name: Tests
 
 on: ['push']
 
+
+# create 3 service containers for registry1,2,3 for copy operations all registry should have auth setup
+# matrix job to try copying back and forth
+# a cron job that uses actual akhilerm token to work between docker and quay repos
+
 jobs:
-  test1:
-    name: Test push from docker hub to quay
+  tag-push:
+    name: Test Copy Operation
     runs-on: ubuntu-latest
+    services:
+      registry1:
+        image: docker.io/distribution/distribution:3
+        ports:
+          - 5001:5000
+      registry2:
+        image: docker.io/distribution/distribution:3
+        ports:
+          - 5002:5000
+      registry3:
+        image: docker.io/distribution/distribution:3
+        ports:
+          - 5003:5000
     steps:
       - name: Checkout
         uses: actions/checkout@v2

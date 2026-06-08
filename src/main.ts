@@ -2,7 +2,7 @@ import {parse} from 'csv-parse/sync'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   try {
     const source: string = core.getInput('src')
     const dockerConfigPath: string =
@@ -61,5 +61,3 @@ export async function getDestinationTags(): Promise<string[]> {
 
   return res.filter(item => item).map(pat => pat.trim())
 }
-
-run()
