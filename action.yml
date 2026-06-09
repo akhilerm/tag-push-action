@@ -12,5 +12,5 @@ inputs:
     required: false
     description: 'Docker config file path'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
