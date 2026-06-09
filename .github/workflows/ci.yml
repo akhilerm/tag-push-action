@@ -1,37 +1,86 @@
 name: Tests
 
-on: ['push']
-
-
-# create 3 service containers for registry1,2,3 for copy operations all registry should have auth setup
-# matrix job to try copying back and forth
-# a cron job that uses actual akhilerm token to work between docker and quay repos
+on:
+  push:
+  schedule:
+    # Real registry (docker.io <-> quay.io) token-based copy.
+    - cron: '0 6 * * 1'
 
 jobs:
   tag-push:
     name: Test Copy Operation
     runs-on: ubuntu-latest
-    services:
-      registry1:
-        image: docker.io/distribution/distribution:3
-        ports:
-          - 5001:5000
-      registry2:
-        image: docker.io/distribution/distribution:3
-        ports:
-          - 5002:5000
-      registry3:
-        image: docker.io/distribution/distribution:3
-        ports:
-          - 5003:5000
+    if: github.event_name == 'push'
+    env:
+      REGISTRY_USER: testuser
+      REGISTRY_PASSWORD: testpassword
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Start authenticated registry
+        run: |
+          mkdir -p "$RUNNER_TEMP/auth"
+          docker run --rm --entrypoint htpasswd httpd:2 \
+            -Bbn "$REGISTRY_USER" "$REGISTRY_PASSWORD" > "$RUNNER_TEMP/auth/htpasswd"
+          docker run -d --restart=always \
+            --name registry \
+            -p 5001:5000 \
+            -v "$RUNNER_TEMP/auth:/auth" \
+            -e REGISTRY_AUTH=htpasswd \
+            -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+            -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+            docker.io/distribution/distribution:3
+          # Wait until the registry answers (401 = up and asking for auth).
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:5001/v2/" || true)
+            [ "$code" != "000" ] && break
+            sleep 1
+          done
+
+      - name: Login to registry
+        run: |
+          echo "$REGISTRY_PASSWORD" | \
+            docker login localhost:5001 -u "$REGISTRY_USER" --password-stdin
+
+      - name: Copy image to the registry
+        uses: ./
+        with:
+          src: docker.io/library/busybox:latest
+          dst: |
+            localhost:5001/busybox:ci
+
+      - name: Verify pushed image
+        # The copied image must be byte-identical to the source, so their
+        # (content-addressed) image IDs have to match.
+        run: |
+          docker pull busybox:latest
+          docker pull localhost:5001/busybox:ci
+          SRC_ID=$(docker images -q busybox:latest)
+          DST_ID=$(docker images -q localhost:5001/busybox:ci)
+          echo "pushed image: ${DST_ID} (expected ${SRC_ID})"
+          test "$SRC_ID" = "$DST_ID"
+
+  # Token-based copy between docker.io and quay.io. Runs only on the cron
+  # schedule (needs the QUAY_*/DOCKERHUB_* secrets and will not run on forks).
+  real-registries:
+    name: Test docker.io <-> quay.io copy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Get image tag from commit hash
         run: |
           SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
           echo "TAG=${SHORT_HASH}" >> $GITHUB_ENV
+
+      - name: Login Dockerhub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login Quay
         uses: docker/login-action@v4
@@ -40,75 +89,46 @@ jobs:
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_TOKEN }}
 
-      - name: Login Dockerhub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Test retag and pushing image
-        uses: akhilerm/tag-push-action@main
+      # First direction: docker.io -> quay.io
+      - name: Copy docker.io to quay.io
+        uses: ./
         with:
           src: docker.io/openebs/linux-utils:ci
           dst: |
             quay.io/akhilerm/linux-utils:${{ env.TAG }}
 
-      - name: Verify pushed image
+      - name: Verify docker.io to quay.io
         # pull both images and check if hash is same
         run: |
-          docker pull openebs/linux-utils:ci
+          docker pull docker.io/openebs/linux-utils:ci
           docker pull quay.io/akhilerm/linux-utils:${{ env.TAG }}
-          HASH1=$(docker images -q openebs/linux-utils:ci)
+          HASH1=$(docker images -q docker.io/openebs/linux-utils:ci)
           HASH2=$(docker images -q quay.io/akhilerm/linux-utils:${{ env.TAG }})
-          test $HASH1 = $HASH2
+          test "$HASH1" = "$HASH2"
 
-  test2:
-    name: Test push from quay to docker hub
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Get image tag from commit hash
-        run: |
-          SHORT_HASH=$(git rev-parse --short "$GITHUB_SHA")
-          echo "TAG=${SHORT_HASH}" >> $GITHUB_ENV
-
-      - name: Login Dockerhub
-        uses: docker/login-action@v4
+      # Second direction: quay.io -> docker.io
+      - name: Copy quay.io to docker.io
+        uses: ./
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login Quay
-        uses: docker/login-action@v4
-        with:
-          registry: 'quay.io'
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_TOKEN }}
-
-      - name: Test retag and pushing image
-        uses: akhilerm/tag-push-action@main
-        with:
-          src: quay.io/openebs/linux-utils:ci
+          src: quay.io/centos/centos:stream9-minimal
           dst: |
-            docker.io/akhilerm/linux-utils:${{ env.TAG }}
+            docker.io/akhilerm/centos-test:stream9
 
-      - name: Verify pushed image
+      - name: Verify quay.io to docker.io
         # pull both images and check if hash is same
         run: |
-          docker pull quay.io/openebs/linux-utils:ci
-          docker pull akhilerm/linux-utils:${{ env.TAG }}
-          HASH1=$(docker images -q quay.io/openebs/linux-utils:ci)
-          HASH2=$(docker images -q akhilerm/linux-utils:${{ env.TAG }})
-          test $HASH1 = $HASH2
+          docker pull quay.io/centos/centos:stream9-minimal
+          docker pull docker.io/akhilerm/centos-test:stream9
+          HASH1=$(docker images -q quay.io/centos/centos:stream9-minimal)
+          HASH2=$(docker images -q docker.io/akhilerm/centos-test:stream9)
+          test "$HASH1" = "$HASH2"
 
   test3:
     name: Unit Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Install
         run: npm install
