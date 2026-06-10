@@ -98,13 +98,14 @@ jobs:
             quay.io/akhilerm/linux-utils:${{ env.TAG }}
 
       - name: Verify docker.io to quay.io
-        # pull both images and check if hash is same
+        # The copy must be byte-identical, so the registry manifest digests
+        # have to match. (Local `docker images -q` IDs are unreliable for
+        # multi-arch images, so compare the registry digests directly.)
         run: |
-          docker pull docker.io/openebs/linux-utils:ci
-          docker pull quay.io/akhilerm/linux-utils:${{ env.TAG }}
-          HASH1=$(docker images -q docker.io/openebs/linux-utils:ci)
-          HASH2=$(docker images -q quay.io/akhilerm/linux-utils:${{ env.TAG }})
-          test "$HASH1" = "$HASH2"
+          SRC=$(docker buildx imagetools inspect docker.io/openebs/linux-utils:ci --format '{{.Manifest.Digest}}')
+          DST=$(docker buildx imagetools inspect quay.io/akhilerm/linux-utils:${{ env.TAG }} --format '{{.Manifest.Digest}}')
+          echo "pushed digest: ${DST} (expected ${SRC})"
+          test "$SRC" = "$DST"
 
       # Second direction: quay.io -> docker.io
       - name: Copy quay.io to docker.io
@@ -115,13 +116,14 @@ jobs:
             docker.io/akhilerm/centos-test:stream9
 
       - name: Verify quay.io to docker.io
-        # pull both images and check if hash is same
+        # The copy must be byte-identical, so the registry manifest digests
+        # have to match. (Local `docker images -q` IDs are unreliable for
+        # multi-arch images, so compare the registry digests directly.)
         run: |
-          docker pull quay.io/centos/centos:stream9-minimal
-          docker pull docker.io/akhilerm/centos-test:stream9
-          HASH1=$(docker images -q quay.io/centos/centos:stream9-minimal)
-          HASH2=$(docker images -q docker.io/akhilerm/centos-test:stream9)
-          test "$HASH1" = "$HASH2"
+          SRC=$(docker buildx imagetools inspect quay.io/centos/centos:stream9-minimal --format '{{.Manifest.Digest}}')
+          DST=$(docker buildx imagetools inspect docker.io/akhilerm/centos-test:stream9 --format '{{.Manifest.Digest}}')
+          echo "pushed digest: ${DST} (expected ${SRC})"
+          test "$SRC" = "$DST"
 
   test3:
     name: Unit Test
