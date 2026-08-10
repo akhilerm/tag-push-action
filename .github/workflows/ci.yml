@@ -77,13 +77,13 @@ jobs:
           echo "TAG=${SHORT_HASH}" >> $GITHUB_ENV
 
       - name: Login Dockerhub
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login Quay
-        uses: docker/login-action@v4.5.2
+        uses: docker/login-action@v4.6.0
         with:
           registry: 'quay.io'
           username: ${{ secrets.QUAY_USERNAME }}
